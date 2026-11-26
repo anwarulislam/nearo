@@ -1,7 +1,7 @@
 #!/bin/zsh
 # Exercise a 1.0.0 -> 1.0.1 install with a temporary signer and local feed.
 set -euo pipefail
-cd "$(dirname "$0")/.."
+cd "${NEARO_PROJECT_DIR:-$(dirname "$0")/..}"
 work=$(mktemp -d)
 keychain="$work/test.keychain-db"
 cleanup() {
@@ -13,7 +13,7 @@ trap cleanup EXIT
 
 # The test key never becomes a release identity. Scope codesign to this keychain.
 openssl req -x509 -newkey rsa:2048 -nodes -days 1 -subj '/CN=Nearo Updater Test' \
-  -addext 'keyUsage=critical,digitalSignature' -addext 'extendedKeyUsage=critical,codeSigning' \
+  -addext 'basicConstraints=critical,CA:false' -addext 'keyUsage=critical,digitalSignature' -addext 'extendedKeyUsage=critical,codeSigning' \
   -keyout "$work/key.pem" -out "$work/cert.pem" 2>/dev/null
 openssl pkcs12 -export -inkey "$work/key.pem" -in "$work/cert.pem" \
   -keypbe PBE-SHA1-3DES -certpbe PBE-SHA1-3DES -macalg sha1 \
@@ -22,6 +22,14 @@ security create-keychain -p test "$keychain"
 security unlock-keychain -p test "$keychain"
 security import "$work/test.p12" -k "$keychain" -P test -T /usr/bin/codesign
 security set-key-partition-list -S apple-tool:,apple: -s -k test "$keychain" >/dev/null
+
+# On GitHub's disposable macOS runner, explicitly trust the self-signed fixture
+# for code signing before asking codesign to resolve it.
+if [[ ${GITHUB_ACTIONS:-} == true ]]; then
+  sudo security add-trusted-cert -d -r trustRoot -p codeSign -k /Library/Keychains/System.keychain "$work/cert.pem"
+fi
+identity=$(openssl x509 -in "$work/cert.pem" -noout -fingerprint -sha1 | cut -d= -f2 | tr -d :)
+security find-identity -p codesigning "$keychain" | grep -F "$identity" >/dev/null
 
 # Sign the real built app and its embedded extensions, using disposable copies.
 xcode=(xcodebuild -project Nearo.xcodeproj -scheme Nearo -destination "platform=macOS,arch=$(uname -m)" -derivedDataPath .build)
@@ -35,7 +43,7 @@ for entry in "old 1.0.0" "new 1.0.1"; do
   app="$work/new/Nearo.app"
   if [[ "$name" == old ]]; then app="$fixture/old.app"; fi
   plutil -replace CFBundleShortVersionString -string "${entry##* }" "$app/Contents/Info.plist"
-  codesign --force --deep --keychain "$keychain" --sign 'Nearo Updater Test' "$app"
+  codesign --force --deep --keychain "$keychain" --sign "$identity" "$app"
   codesign --verify --strict --deep "$app"
 done
 ditto -c -k --keepParent "$work/new/Nearo.app" "$fixture/new.zip"

@@ -17,6 +17,21 @@ jobs:
     runs-on: macos-26
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Select the tagged source for a release retry
+        env:
+          REQUESTED_TAG: ${{ inputs.version }}
+        run: |
+          cp scripts/test-updater.sh "$RUNNER_TEMP/test-updater.sh"
+          if [[ -n "$REQUESTED_TAG" ]]; then
+            [[ "$REQUESTED_TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]
+            if git show-ref --verify --quiet "refs/tags/$REQUESTED_TAG"; then
+              git checkout --detach "refs/tags/$REQUESTED_TAG"
+            fi
+          fi
+          echo "RELEASE_SHA=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
 
       - name: Verify the tag matches the app
         env:
@@ -30,7 +45,7 @@ jobs:
           echo "RELEASE_TAG=$tag" >> "$GITHUB_ENV"
 
       - name: Test signed upgrades
-        run: scripts/test-updater.sh
+        run: NEARO_PROJECT_DIR="$GITHUB_WORKSPACE" zsh "$RUNNER_TEMP/test-updater.sh"
 
       - name: Import the release identity
         env:
@@ -46,6 +61,11 @@ jobs:
           security import "$RUNNER_TEMP/identity.p12" -k "$keychain" -P "$PASSWORD" -T /usr/bin/codesign
           rm "$RUNNER_TEMP/identity.p12"
           security set-key-partition-list -S apple-tool:,apple: -s -k "$keychain_password" "$keychain" >/dev/null
+          security find-certificate -p "$keychain" > "$RUNNER_TEMP/release-cert.pem"
+          # The release certificate can be a dedicated, self-signed Nearo identity.
+          if openssl verify -check_ss_sig -CAfile "$RUNNER_TEMP/release-cert.pem" "$RUNNER_TEMP/release-cert.pem" >/dev/null 2>&1; then
+            sudo security add-trusted-cert -d -r trustRoot -p codeSign -k /Library/Keychains/System.keychain "$RUNNER_TEMP/release-cert.pem"
+          fi
           identity=$(security find-identity -p codesigning "$keychain" | awk '/1\) / { print $2; exit }')
           [[ "$identity" =~ ^[A-Fa-f0-9]{40}$ ]]
           echo "NEARO_SIGNING_IDENTITY=$identity" >> "$GITHUB_ENV"
@@ -61,13 +81,13 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           gh api --method POST "repos/$GITHUB_REPOSITORY/releases/generate-notes" \
-            -f tag_name="$RELEASE_TAG" -f target_commitish="$GITHUB_SHA" --jq .body > "$RUNNER_TEMP/notes.md"
+            -f tag_name="$RELEASE_TAG" -f target_commitish="$RELEASE_SHA" --jq .body > "$RUNNER_TEMP/notes.md"
           scripts/update-manifest.sh "$RELEASE_TAG" "$RUNNER_TEMP/notes.md" dist
           version=${RELEASE_TAG#v}
           assets=(dist/Nearo-{AppleSilicon,Intel}.dmg dist/Nearo-"$version"-{AppleSilicon,Intel}.zip dist/SHA256SUMS-"$version".txt dist/latest.json)
           if existing_sha=$(git ls-remote origin "refs/tags/$RELEASE_TAG" | cut -f1) && [[ -n "$existing_sha" ]]; then
             git fetch origin "refs/tags/$RELEASE_TAG"
-            [[ $(git rev-parse 'FETCH_HEAD^{commit}') == "$GITHUB_SHA" ]] || { echo "Tag points to another commit"; exit 1; }
+            [[ $(git rev-parse 'FETCH_HEAD^{commit}') == "$RELEASE_SHA" ]] || { echo "Tag points to another commit"; exit 1; }
           fi
-          gh release create "$RELEASE_TAG" "${assets[@]}" --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" \
+          gh release create "$RELEASE_TAG" "${assets[@]}" --repo "$GITHUB_REPOSITORY" --target "$RELEASE_SHA" \
             --title "Nearo $version" --notes-file "$RUNNER_TEMP/notes.md"
