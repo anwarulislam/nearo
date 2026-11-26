@@ -1,0 +1,73 @@
+name: Release Nearo
+
+on:
+  push:
+    tags: ['v[0-9]+.[0-9]+.[0-9]+']
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Stable release tag (defaults to the project version)'
+        required: false
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: macos-26
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Verify the tag matches the app
+        env:
+          REQUESTED_TAG: ${{ inputs.version }}
+        run: |
+          version=$(xcodebuild -project Nearo.xcodeproj -target Nearo -configuration Release -showBuildSettings |
+            awk -F' = ' '/ MARKETING_VERSION = / { print $2 }')
+          tag=${REQUESTED_TAG:-v$version}
+          if [[ "$GITHUB_REF_TYPE" == tag ]]; then tag="$GITHUB_REF_NAME"; fi
+          [[ "$tag" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ && "$tag" == "v$version" ]] || { echo "Tag $tag must match project version $version"; exit 1; }
+          echo "RELEASE_TAG=$tag" >> "$GITHUB_ENV"
+
+      - name: Test signed upgrades
+        run: scripts/test-updater.sh
+
+      - name: Import the release identity
+        env:
+          CERTIFICATE: ${{ secrets.NEARO_SIGNING_P12_BASE64 }}
+          PASSWORD: ${{ secrets.NEARO_SIGNING_P12_PASSWORD }}
+        run: |
+          : "${CERTIFICATE:?Set NEARO_SIGNING_P12_BASE64}" "${PASSWORD:?Set NEARO_SIGNING_P12_PASSWORD}"
+          keychain="$RUNNER_TEMP/nearo-signing.keychain-db"
+          keychain_password=$(openssl rand -hex 24)
+          security create-keychain -p "$keychain_password" "$keychain"
+          security unlock-keychain -p "$keychain_password" "$keychain"
+          printf '%s' "$CERTIFICATE" | base64 -D > "$RUNNER_TEMP/identity.p12"
+          security import "$RUNNER_TEMP/identity.p12" -k "$keychain" -P "$PASSWORD" -T /usr/bin/codesign
+          rm "$RUNNER_TEMP/identity.p12"
+          security set-key-partition-list -S apple-tool:,apple: -s -k "$keychain_password" "$keychain" >/dev/null
+          identity=$(security find-identity -p codesigning "$keychain" | awk '/1\) / { print $2; exit }')
+          [[ "$identity" =~ ^[A-Fa-f0-9]{40}$ ]]
+          echo "NEARO_SIGNING_IDENTITY=$identity" >> "$GITHUB_ENV"
+          echo "NEARO_SIGNING_KEYCHAIN=$keychain" >> "$GITHUB_ENV"
+
+      - name: Build and sign both architectures
+        env:
+          NEARO_REQUIRE_SIGNING: '1'
+        run: scripts/release.sh
+
+      - name: Publish installers and update feed
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh api --method POST "repos/$GITHUB_REPOSITORY/releases/generate-notes" \
+            -f tag_name="$RELEASE_TAG" -f target_commitish="$GITHUB_SHA" --jq .body > "$RUNNER_TEMP/notes.md"
+          scripts/update-manifest.sh "$RELEASE_TAG" "$RUNNER_TEMP/notes.md" dist
+          version=${RELEASE_TAG#v}
+          assets=(dist/Nearo-{AppleSilicon,Intel}.dmg dist/Nearo-"$version"-{AppleSilicon,Intel}.zip dist/SHA256SUMS-"$version".txt dist/latest.json)
+          if existing_sha=$(git ls-remote origin "refs/tags/$RELEASE_TAG" | cut -f1) && [[ -n "$existing_sha" ]]; then
+            git fetch origin "refs/tags/$RELEASE_TAG"
+            [[ $(git rev-parse 'FETCH_HEAD^{commit}') == "$GITHUB_SHA" ]] || { echo "Tag points to another commit"; exit 1; }
+          fi
+          gh release create "$RELEASE_TAG" "${assets[@]}" --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" \
+            --title "Nearo $version" --notes-file "$RUNNER_TEMP/notes.md"

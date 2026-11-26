@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="78" height="154" viewBox="0 0 78 154">
+  <defs>
+    <linearGradient id="sky" x2=".55" y2="1"><stop stop-color="#7c9bae"/><stop offset=".5" stop-color="#a8c6d2"/><stop offset="1" stop-color="#d6e6dd"/></linearGradient>
+    <linearGradient id="hill" x2="1" y2="1"><stop stop-color="#d2e2d6"/><stop offset="1" stop-color="#6e98a1"/></linearGradient>
+    <linearGradient id="sea" x2=".5" y2="1"><stop stop-color="#3f6e87"/><stop offset="1" stop-color="#a1c2bd"/></linearGradient>
+    <clipPath id="screen"><rect x="4" y="4" width="67" height="145" rx="12"/></clipPath>
+  </defs>
+  <rect x="74" y="35" width="3" height="22" rx="1" fill="#777"/>
+  <rect x=".5" y=".5" width="74" height="152" rx="16" fill="#25282d" stroke="#969ca5"/>
+  <g clip-path="url(#screen)">
+    <rect x="4" y="4" width="67" height="145" fill="url(#sky)"/>
+    <ellipse cx="-2" cy="131" rx="58.5" ry="70" transform="rotate(-25 -2 131)" fill="url(#hill)"/>
+    <ellipse cx="74" cy="139" rx="58.5" ry="70" transform="rotate(36 74 139)" fill="url(#sea)"/>
+  </g>
+  <circle cx="37.5" cy="11.5" r="2.5" fill="#222"/>
+  <rect x="26" y="142" width="23" height="2" rx="1" fill="#e0ebe9"/>
+</svg>

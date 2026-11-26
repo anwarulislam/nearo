@@ -1,0 +1,33 @@
+name: CI
+
+on:
+  push:
+    branches: [build]
+  pull_request:
+    branches: [build]
+
+jobs:
+  build:
+    name: Build & Verify (macOS)
+    runs-on: macos-26
+
+    strategy:
+      matrix:
+        arch: [arm64, x86_64]
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Select Xcode
+        run: |
+          sudo xcode-select -s /Applications/Xcode.app
+          xcodebuild -version
+
+      - name: Build Nearo (${{ matrix.arch }})
+        run: |
+          xcodebuild -project Nearo.xcodeproj -scheme Nearo -configuration Release \
+            -destination 'generic/platform=macOS' \
+            ARCHS="${{ matrix.arch }}" ONLY_ACTIVE_ARCH=NO \
+            CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO \
+            build -quiet

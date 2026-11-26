@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CFBundleName</key>
+	<string>$(NEARO_APP_NAME)</string>
+	<key>CFBundleDisplayName</key>
+	<string>$(NEARO_APP_NAME)</string>
+	<key>NSBonjourServices</key>
+	<array>
+		<string>_kdeconnect._udp</string>
+	</array>
+	<key>NSBluetoothAlwaysUsageDescription</key>
+	<string>Nearo uses Bluetooth to connect with your phone and sync the call history you allow it to share.</string>
+	<key>NSBluetoothPeripheralUsageDescription</key>
+	<string>Nearo uses Bluetooth to communicate with your paired phone.</string>
+</dict>
+</plist>
