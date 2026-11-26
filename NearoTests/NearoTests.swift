@@ -421,7 +421,7 @@ struct NearoTests {
 
     private func makeTemporaryPayload(bytes: Int) throws -> URL {
         var payload = Data(count: bytes)
-        payload.withUnsafeMutableBytes { buffer in
+        payload.withUnsafeMutableBytes { (buffer: UnsafeMutableRawBufferPointer) in
             for index in 0..<bytes {
                 buffer[index] = UInt8(truncatingIfNeeded: index &* 31 &+ 7)
             }

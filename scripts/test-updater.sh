@@ -1,7 +1,7 @@
 #!/bin/zsh
 # Exercise a 1.0.0 -> 1.0.1 install with a temporary signer and local feed.
 set -euo pipefail
-cd "${NEARO_PROJECT_DIR:-$(dirname "$0")/..}"
+cd "$(dirname "$0")/.."
 work=$(mktemp -d)
 keychain="$work/test.keychain-db"
 cleanup() {
