@@ -4,7 +4,7 @@
 
 ![Nearo Overview with a paired Pixel, recent conversations, phone status and transfers](docs/screenshots/overview.jpg)
 
-[Download for Apple Silicon](https://github.com/anwarulislam/nearo/releases/latest/download/Nearo-AppleSilicon.dmg) · [Download for Intel](https://github.com/anwarulislam/nearo/releases/latest/download/Nearo-Intel.dmg) · [Browse the feature gallery](https://anwar.bd/nearo/gallery)
+[Website](https://anwar.bd/nearo/) · [Latest release](https://github.com/anwarulislam/nearo/releases/latest) · [Download for Apple Silicon](https://github.com/anwarulislam/nearo/releases/latest/download/Nearo-AppleSilicon.dmg) · [Download for Intel](https://github.com/anwarulislam/nearo/releases/latest/download/Nearo-Intel.dmg) · [Browse the feature gallery](https://anwar.bd/nearo/gallery)
 
 Nearo’s first public version is **1.0.0**. It checks daily for stable updates. Choose **Install and Relaunch** when you’re ready, or use **Check for Updates** to check immediately.
 
@@ -28,7 +28,7 @@ Nearo’s first public version is **1.0.0**. It checks daily for stable updates.
 
 <p><img src="docs/screenshots/messages.jpg" width="49%" alt="An SMS thread on the Mac"> <img src="docs/screenshots/remote-input-locked.jpg" width="49%" alt="Mac pointer locked to the phone, with Option-X highlighted"></p>
 
-[Full feature and screenshot inventory](docs/features.md) · [Setup and troubleshooting](https://anwar.bd/nearo/guide) · [Roadmap](ROADMAP.md)
+[Full feature and screenshot inventory](docs/features.md) · [Setup and troubleshooting](https://anwar.bd/nearo/guide)
 
 ## Size and performance
 
