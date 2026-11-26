@@ -46,9 +46,12 @@ jobs:
       - name: Test signed upgrades
         run: |
           # Exercise the selected release source with the invoking workflow's test tooling.
+          # Apply the test-only entry point to the tagged file while preserving its app implementation.
+          git diff "$RELEASE_SHA" "$GITHUB_SHA" -- Nearo/NearoApp.swift > "$RUNNER_TEMP/host.patch"
+          if [[ -s "$RUNNER_TEMP/host.patch" ]]; then git apply "$RUNNER_TEMP/host.patch"; fi
           git restore --source="$GITHUB_SHA" --worktree -- NearoTests scripts/test-updater.sh
           scripts/test-updater.sh
-          git restore --worktree -- NearoTests scripts/test-updater.sh
+          git restore --worktree -- NearoTests scripts/test-updater.sh Nearo/NearoApp.swift
           git diff --exit-code HEAD --
 
       - name: Show macOS test host crash details
@@ -96,6 +99,25 @@ jobs:
         env:
           NEARO_REQUIRE_SIGNING: '1'
         run: scripts/release.sh
+
+      - name: Launch the packaged Apple Silicon app
+        run: |
+          mkdir "$RUNNER_TEMP/launch-check"
+          ditto -xk "dist/Nearo-${RELEASE_TAG#v}-AppleSilicon.zip" "$RUNNER_TEMP/launch-check"
+          python3 - "$RUNNER_TEMP/launch-check/Nearo.app/Contents/MacOS/Nearo" <<'PYTHON'
+          import subprocess, sys
+          executable = sys.argv[1]
+          app = subprocess.Popen([executable])
+          try:
+              status = app.wait(timeout=12)
+          except subprocess.TimeoutExpired:
+              app.terminate()
+              app.wait(timeout=10)
+              print("Packaged app stayed running through startup.")
+          else:
+              subprocess.run(["lldb", "--batch", "-o", "run", "-k", "bt", "--", executable], timeout=45)
+              raise SystemExit(f"Packaged app exited during startup ({status})")
+          PYTHON
 
       - name: Publish installers and update feed
         env:

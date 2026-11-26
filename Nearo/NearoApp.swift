@@ -37,6 +37,14 @@ final class NearoAppDelegate: NSObject, NSApplicationDelegate {
     }
 }
 
+#if NEARO_UPDATER_TEST_HOST
+// The hosted installer tests need a bundle identity and an event loop, without
+// starting discovery or the interactive workspace on the runner.
+@main
+enum NearoUpdaterTestHost {
+    @MainActor static func main() { NSApplication.shared.run() }
+}
+#else
 @main
 struct NearoApp: App {
     @NSApplicationDelegateAdaptor(NearoAppDelegate.self) private var delegate
@@ -139,3 +147,4 @@ struct NearoApp: App {
 
     }
 }
+#endif

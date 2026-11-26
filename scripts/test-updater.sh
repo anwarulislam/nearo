@@ -80,6 +80,6 @@ jq -n --arg url "$server" --arg name "Nearo-1.0.1-$label.zip" --arg digest "sha2
 
 TEST_RUNNER_NEARO_UPDATE_FIXTURE="$fixture" TEST_RUNNER_NEARO_UPDATE_SERVER="$server" \
   TEST_RUNNER_NEARO_UPDATE_FEED="$server/latest.json" \
-  "${xcode[@]}" test -parallel-testing-enabled NO \
+  "${xcode[@]}" test 'SWIFT_ACTIVE_COMPILATION_CONDITIONS=$(inherited) NEARO_UPDATER_TEST_HOST' -parallel-testing-enabled NO \
     -only-testing:NearoTests/AppVersionTests -only-testing:NearoTests/ReleaseFeedTests \
     -only-testing:NearoTests/UpdateInstallerTests
