@@ -51,6 +51,21 @@ jobs:
           git restore --worktree -- NearoTests scripts/test-updater.sh
           git diff --exit-code HEAD --
 
+      - name: Show macOS test host crash details
+        if: failure()
+        run: |
+          python3 - <<'PYTHON'
+          import json, pathlib
+          reports = pathlib.Path.home() / "Library/Logs/DiagnosticReports"
+          for path in sorted(reports.rglob("Nearo*.ips"))[-3:]:
+              report = json.loads(path.read_text().split("\n", 1)[1])
+              print(path.name, report.get("exception"), report.get("termination"), report.get("asi"))
+              for thread in report.get("threads", []):
+                  if thread.get("triggered"):
+                      for frame in thread.get("frames", [])[:24]:
+                          print(frame.get("symbol", frame.get("imageOffset")))
+          PYTHON
+
       - name: Import the release identity
         env:
           CERTIFICATE: ${{ secrets.NEARO_SIGNING_P12_BASE64 }}
