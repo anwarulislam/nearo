@@ -264,14 +264,14 @@ enum DemoDevices {
 extension DeviceViewModel {
     public static func mockConnectedPhone() -> DeviceViewModel {
         let now = Date()
-        let mira = "+1 202 555 0146"
+        let anwar = "+1 202 555 0146"
         let theo = "+1 202 555 0162"
         let leila = "+1 202 555 0118"
-        let arcadeWalk = SMSConversation(threadId: 101, addresses: [mira], messages: [
-            SMSMessage(body: "The copper arcade catches the light around five. Want to start there?", addresses: [mira], date: now.addingTimeInterval(-3360), type: 1, threadId: 101, read: true),
-            SMSMessage(body: "Yes! I’ll bring the wide lens. Which entrance?", addresses: [mira], date: now.addingTimeInterval(-2800), type: 2, threadId: 101, read: true),
-            SMSMessage(body: "The one across from the tile workshop.", addresses: [mira], date: now.addingTimeInterval(-420), type: 1, threadId: 101, read: true),
-            SMSMessage(body: "Found it. See you under the arch!", addresses: [mira], date: now.addingTimeInterval(-95), type: 2, threadId: 101, read: true)
+        let arcadeWalk = SMSConversation(threadId: 101, addresses: [anwar], messages: [
+            SMSMessage(body: "The copper arcade catches the light around five. Want to start there?", addresses: [anwar], date: now.addingTimeInterval(-3360), type: 1, threadId: 101, read: true),
+            SMSMessage(body: "Yes! I’ll bring the wide lens. Which entrance?", addresses: [anwar], date: now.addingTimeInterval(-2800), type: 2, threadId: 101, read: true),
+            SMSMessage(body: "The one across from the tile workshop.", addresses: [anwar], date: now.addingTimeInterval(-420), type: 1, threadId: 101, read: true),
+            SMSMessage(body: "Found it. See you under the arch!", addresses: [anwar], date: now.addingTimeInterval(-95), type: 2, threadId: 101, read: true)
         ])
         let route = SMSConversation(threadId: 102, addresses: [theo], messages: [
             SMSMessage(body: "I marked the footbridge on the route map. It’s a good spot for a panorama.", addresses: [theo], date: now.addingTimeInterval(-5100), type: 1, threadId: 102, read: true)
@@ -282,7 +282,7 @@ extension DeviceViewModel {
 
         var mockBook = ContactBook()
         let contacts = [
-            Contact(id: "c1", name: "Mira Sen", numbers: [mira, "+1 202 555 0147"], emails: ["mira@example.org"]),
+            Contact(id: "c1", name: "Anwarul Islam", numbers: [anwar, "+1 202 555 0147"], emails: ["hi@anwar.bd"]),
             Contact(id: "c2", name: "Theo Park", numbers: [theo], emails: ["theo@example.org"]),
             Contact(id: "c3", name: "Leila Noor", numbers: [leila], emails: ["leila@example.org"]),
             Contact(id: "c4", name: "Robin Ellis", numbers: ["+1 202 555 0175"]),
@@ -317,14 +317,14 @@ extension DeviceViewModel {
             ],
             notifications: [
                 PhoneNotification(id: "n0", deviceId: "mock_phone", appName: "Messages", title: "Lantern Print Lab", text: "Use 482615 to sign in to Lantern Print Lab.", date: now.addingTimeInterval(-48), replyId: nil, isDismissable: true, code: "482615"),
-                PhoneNotification(id: "n1", deviceId: "mock_phone", appName: "Signal", title: "Mira Sen", text: "The library steps are empty. One more stop?", date: now.addingTimeInterval(-190), replyId: "r1", isDismissable: true),
+                PhoneNotification(id: "n1", deviceId: "mock_phone", appName: "Signal", title: "Anwarul Islam", text: "The library steps are empty. One more stop?", date: now.addingTimeInterval(-190), replyId: "r1", isDismissable: true),
                 PhoneNotification(id: "n2", deviceId: "mock_phone", appName: "Calendar", title: "Contact sheet review", text: "Tomorrow at 10 at the Lantern studio.", date: now.addingTimeInterval(-1260), replyId: nil, isDismissable: true)
             ]
         )
         phone.onRemoteInput = { _ in true }
         phone.contacts = mockBook
         phone.calls = [
-            CallEntry(date: now.addingTimeInterval(-540), kind: .missed, number: mira),
+            CallEntry(date: now.addingTimeInterval(-540), kind: .missed, number: anwar),
             CallEntry(date: now.addingTimeInterval(-2400), kind: .outgoing, number: leila),
             CallEntry(date: now.addingTimeInterval(-6300), kind: .answered, number: theo)
         ]

@@ -155,9 +155,9 @@ final class WebAccessTests: XCTestCase {
                 }
             }
             if page == "Contacts" {
-                _ = try await js("(() => { const input = document.querySelector('#topbar #search'); input.focus(); input.value = 'Mira'; input.dispatchEvent(new Event('input', {bubbles:true})); })()")
+                _ = try await js("(() => { const input = document.querySelector('#topbar #search'); input.focus(); input.value = 'Anwar'; input.dispatchEvent(new Event('input', {bubbles:true})); })()")
                 try await waitUntil {
-                    try await js("document.activeElement.id === 'search' && document.querySelectorAll('.list-scroll .person').length === 1 && document.querySelector('.list-scroll .person').textContent.includes('Mira')") as? Bool == true
+                    try await js("document.activeElement.id === 'search' && document.querySelectorAll('.list-scroll .person').length === 1 && document.querySelector('.list-scroll .person').textContent.includes('Anwar')") as? Bool == true
                 }
             }
             if page == "Messages" {

@@ -124,7 +124,7 @@ final class NearoUITests: XCTestCase {
                 let recipient = window.textFields["Name or phone number"]
                 XCTAssertTrue(recipient.waitForExistence(timeout: 3))
                 recipient.click()
-                recipient.typeText("Mira")
+                recipient.typeText("Anwar")
                 try shot("live-compose")
             }
             if section == "Notifications" {
@@ -191,7 +191,7 @@ final class NearoUITests: XCTestCase {
         let search = toolbar.textFields["Search contacts"]
         XCTAssertTrue(search.waitForExistence(timeout: 8))
         search.click()
-        search.typeText("Mira Sen")
+        search.typeText("Anwarul Islam")
         XCTAssertTrue(window.staticTexts["1 match"].waitForExistence(timeout: 3))
         let picture = XCTAttachment(screenshot: window.screenshot())
         picture.name = "Themed contact search"

@@ -209,7 +209,7 @@ final class CallCard {
     #if DEBUG
     /// Demo data: a ringing card that answers itself after a few seconds.
     func showDemo() {
-        let caller = Caller(name: "Mira Sen", isContact: true, number: "+1 202 555 0146", photo: nil, deviceName: DemoDevices.phone)
+        let caller = Caller(name: "Anwarul Islam", isContact: true, number: "+1 202 555 0146", photo: nil, deviceName: DemoDevices.phone)
         ringing(deviceId: "mock_phone", caller: caller)
         Task {
             try? await Task.sleep(for: .seconds(6))
