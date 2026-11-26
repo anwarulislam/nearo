@@ -26,10 +26,19 @@ security set-key-partition-list -S apple-tool:,apple: -s -k test "$keychain" >/d
 # On GitHub's disposable macOS runner, explicitly trust the self-signed fixture
 # for code signing before asking codesign to resolve it.
 if [[ ${GITHUB_ACTIONS:-} == true ]]; then
+  security set-keychain-settings -lut 21600 "$keychain"
+  security list-keychains -d user -s "$keychain" "$HOME/Library/Keychains/login.keychain-db"
   sudo security add-trusted-cert -d -r trustRoot -p codeSign -k /Library/Keychains/System.keychain "$work/cert.pem"
 fi
 identity=$(openssl x509 -in "$work/cert.pem" -noout -fingerprint -sha1 | cut -d= -f2 | tr -d :)
 security find-identity -p codesigning "$keychain" | grep -F "$identity" >/dev/null
+
+if [[ ${GITHUB_ACTIONS:-} == true ]]; then
+  security list-keychains -d user
+  security find-identity -v -p codesigning "$keychain"
+  cp /usr/bin/true "$work/signing-check"
+  /usr/bin/codesign --force --sign "$identity" "$work/signing-check"
+fi
 
 # Sign the real built app and its embedded extensions, using disposable copies.
 xcode=(xcodebuild -project Nearo.xcodeproj -scheme Nearo -destination "platform=macOS,arch=$(uname -m)" -derivedDataPath .build)
